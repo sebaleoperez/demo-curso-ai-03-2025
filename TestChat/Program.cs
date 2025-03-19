@@ -1,73 +1,31 @@
-﻿// See https://aka.ms/new-console-template for more information
-using System.ClientModel;
-using System.Diagnostics;
-using Azure;
-using Azure.AI.OpenAI;
-using Microsoft.Extensions.AI;
-using OpenAI.Chat;
-using OpenAI.Images;
+﻿string systemPrompt = "Sos un chat que responde con referencias a Los Simpsons.";
+string userMessage = "Hola como estas ?";
+string imageSystemPrompt = "Sos un asistente que describe y analiza imagenes.";
+string imageMessage = "Hola, quien es la persona en la imagen ?";
+string dalleInput = "La ciudad de Springfield de los simpsons.";
+string ragMessage = "Cuales son los convocados por Argentina para el proximo partido ?";
+string manualRAGMessage = "Listame los jugadores de Mis Amigos";
 
-/*
-var deployName = "";
-var endpoint = "";
-var key = new ApiKeyCredential("");
+Console.WriteLine("Chat with Ollama:");
+Console.WriteLine(await ChatWithOllama.ChatAsync(systemPrompt,userMessage));
 
-IChatClient client = new AzureOpenAIClient(new Uri(endpoint), key).AsChatClient(deployName);
-*/
-IChatClient client = new OllamaChatClient(new Uri("http://localhost:11434/"), "llama3.2");
+Console.WriteLine("Chat with GPT4oMini:");
+Console.WriteLine(await ChatWithGPT.ChatAsync(systemPrompt,userMessage));
 
-List<Microsoft.Extensions.AI.ChatMessage> messages = new List<Microsoft.Extensions.AI.ChatMessage>();
-messages.Add(new Microsoft.Extensions.AI.ChatMessage(ChatRole.System, "Sos un asistente que saluda."));
-messages.Add(new Microsoft.Extensions.AI.ChatMessage(ChatRole.User, "Quien es el de la imagen ?"));
+Console.WriteLine("Chat Image with GPT4oMini:");
+Console.WriteLine(await ImageChatWithGPT.ChatAsync(imageSystemPrompt,imageMessage));
 
-var imagePath = "./messi.jpg";
-AIContent imageContent = new DataContent(File.ReadAllBytes(imagePath), "image/jpeg");
-messages.Add(new Microsoft.Extensions.AI.ChatMessage(ChatRole.User, [imageContent]));
+Console.WriteLine("Image generation with Dalle:");
+Console.WriteLine(await ImageGenerationWithDalle.ChatAsync(dalleInput));
 
+Console.WriteLine("Chat with AzureAIFoundryRAG:");
+Console.WriteLine(await AzureAIFoundryRAG.ChatAsync(systemPrompt,ragMessage));
 
-var response = await client.GetResponseAsync(messages);
+Console.WriteLine("Chat with ManualRAG:");
+Console.WriteLine(await ChatWithManualRAG.ChatAsync(manualRAGMessage));
 
-Console.WriteLine(response.Messages.First().Text);
+Console.WriteLine("Averiguar info del vuelo:");
+Console.WriteLine(await EjecutarFunciones.ChatAsync("Sos un asistente con proposito general.","Quiero informacion del proximo vuelo que vaya de Seattle a Miami."));
 
-// Ejemplo AzureOpenAI SDK
-
-var endpoint = "";
-var key = "";
-
-AzureOpenAIClient client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(key));
-
-List<ChatMessage> messages = new List<ChatMessage>();
-messages.Add(new SystemChatMessage("Sos un asistente que sabe de cocinar, quiero que me des consejos para hacer un plato con los ingredientes que te de."));
-
-ChatClient chatClient = client.GetChatClient("gpt-4o-mini");
-
-ChatCompletion chatCompletion = await chatClient.CompleteChatAsync(messages);
-string response = chatCompletion.Content[0].Text;
-
-Console.WriteLine(response);
-
-//messages.Add(new AssistantChatMessage(response));
-
-string? request = Console.ReadLine();
-
-messages.Add(new UserChatMessage(request));
-
-chatCompletion = await chatClient.CompleteChatAsync(messages);
-response = chatCompletion.Content[0].Text;
-
-Console.WriteLine(response);
-
-AzureOpenAIClient dalleClient = new AzureOpenAIClient(new Uri(""));
-ImageClient imageClient = dalleClient.GetImageClient("");
-
-ImageGenerationOptions imageGenerationOptions = new ImageGenerationOptions()
-{
-    Quality = GeneratedImageQuality.High,
-    Size = GeneratedImageSize.W1024xH1024,
-    Style = GeneratedImageStyle.Natural,
-    ResponseFormat = GeneratedImageFormat.Uri
-};
-
-GeneratedImage generatedImage = await imageClient.GenerateImageAsync(response, imageGenerationOptions);
-
-Process.Start(new ProcessStartInfo(generatedImage.ImageUri.ToString()) { UseShellExecute = true });
+Console.WriteLine("Enviar un email:");
+Console.WriteLine(await EjecutarFunciones.ChatAsync("Sos un asistente con proposito general.","Enviar una carta a xxx con contenido hola"));
